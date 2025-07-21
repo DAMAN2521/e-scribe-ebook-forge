@@ -1,9 +1,18 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, BookOpen } from "lucide-react";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border sticky top-0 z-50">
@@ -17,18 +26,30 @@ export const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
+            <button 
+              onClick={() => scrollToSection('features')} 
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
               Features
-            </a>
-            <a href="#templates" className="text-muted-foreground hover:text-primary transition-colors">
+            </button>
+            <button 
+              onClick={() => scrollToSection('templates')} 
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
               Templates
-            </a>
-            <a href="#pricing" className="text-muted-foreground hover:text-primary transition-colors">
-              Pricing
-            </a>
-            <a href="#about" className="text-muted-foreground hover:text-primary transition-colors">
-              About
-            </a>
+            </button>
+            <button 
+              onClick={() => scrollToSection('use-cases')} 
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              Use Cases
+            </button>
+            <button 
+              onClick={() => scrollToSection('testimonials')} 
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              Reviews
+            </button>
           </div>
 
           {/* CTA Buttons */}
@@ -58,18 +79,30 @@ export const Navigation = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-4">
-              <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
+              <button 
+                onClick={() => scrollToSection('features')} 
+                className="text-muted-foreground hover:text-primary transition-colors text-left"
+              >
                 Features
-              </a>
-              <a href="#templates" className="text-muted-foreground hover:text-primary transition-colors">
+              </button>
+              <button 
+                onClick={() => scrollToSection('templates')} 
+                className="text-muted-foreground hover:text-primary transition-colors text-left"
+              >
                 Templates
-              </a>
-              <a href="#pricing" className="text-muted-foreground hover:text-primary transition-colors">
-                Pricing
-              </a>
-              <a href="#about" className="text-muted-foreground hover:text-primary transition-colors">
-                About
-              </a>
+              </button>
+              <button 
+                onClick={() => scrollToSection('use-cases')} 
+                className="text-muted-foreground hover:text-primary transition-colors text-left"
+              >
+                Use Cases
+              </button>
+              <button 
+                onClick={() => scrollToSection('testimonials')} 
+                className="text-muted-foreground hover:text-primary transition-colors text-left"
+              >
+                Reviews
+              </button>
               <div className="flex flex-col space-y-2 pt-4">
                 <Button variant="ghost" className="justify-start">
                   Sign In
