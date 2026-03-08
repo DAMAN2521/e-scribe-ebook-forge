@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileText, X, Check, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, X, Check, AlertCircle, Loader2, BookOpen } from "lucide-react";
 
 interface UploadedFile {
   name: string;
@@ -12,6 +13,7 @@ interface UploadedFile {
 }
 
 export const PDFUpload = () => {
+  const navigate = useNavigate();
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -72,11 +74,17 @@ export const PDFUpload = () => {
   };
 
   const handleProcess = () => {
+    if (!uploadedFile) return;
     setProcessing(true);
     setTimeout(() => {
       setProcessing(false);
       setProcessed(true);
-    }, 2000);
+    }, 1500);
+  };
+
+  const handleOpenEbook = () => {
+    if (!uploadedFile) return;
+    navigate("/ebook", { state: { file: uploadedFile.file } });
   };
 
   const handleReset = () => {
@@ -184,9 +192,12 @@ export const PDFUpload = () => {
                   <Check className="h-6 w-6 text-secondary" />
                 </div>
                 <p className="font-semibold text-foreground mb-1">PDF Ready!</p>
-                <p className="text-sm text-muted-foreground mb-4">Your eBook is ready for customization.</p>
+                <p className="text-sm text-muted-foreground mb-4">Your eBook is ready to read.</p>
                 <div className="flex gap-2">
-                  <Button variant="cta" className="flex-1">Choose Template</Button>
+                  <Button variant="cta" className="flex-1" onClick={handleOpenEbook}>
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Read eBook
+                  </Button>
                   <Button variant="outline" className="flex-1" onClick={handleReset}>Upload Another</Button>
                 </div>
               </div>
