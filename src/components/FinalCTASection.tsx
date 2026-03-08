@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check, Clock, Shield } from "lucide-react";
+import { ArrowRight, Check, Zap, Shield } from "lucide-react";
 
 export const FinalCTASection = () => {
   return (
@@ -21,21 +20,21 @@ export const FinalCTASection = () => {
           <div className="flex flex-wrap justify-center gap-6 mb-12 text-white/80">
             <div className="flex items-center">
               <Check className="h-5 w-5 mr-2 text-secondary" />
-              <span>No credit card required</span>
+              <span>100% Free to Start</span>
             </div>
             <div className="flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-secondary" />
-              <span>14-day free trial</span>
+              <Zap className="h-5 w-5 mr-2 text-secondary" />
+              <span>500+ Templates Included</span>
             </div>
             <div className="flex items-center">
               <Shield className="h-5 w-5 mr-2 text-secondary" />
-              <span>Cancel anytime</span>
+              <span>No credit card required</span>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button variant="cta" size="lg" className="text-lg px-8 py-4 h-auto group bg-white text-primary hover:bg-white/90">
-              Start Creating Now
+              Start Creating Free
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Button>
             
@@ -43,10 +42,6 @@ export const FinalCTASection = () => {
               View Live Demo
             </Button>
           </div>
-
-          <p className="text-white/70 text-sm">
-            🚀 <strong>Special Launch Offer:</strong> Get 50% off your first month. Limited time only!
-          </p>
 
           {/* Trust indicators */}
           <div className="mt-12 pt-8 border-t border-white/20">
@@ -60,7 +55,7 @@ export const FinalCTASection = () => {
                 <div className="text-sm">eBooks Created</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">100+</div>
+                <div className="text-2xl font-bold text-white">500+</div>
                 <div className="text-sm">Templates</div>
               </div>
               <div>

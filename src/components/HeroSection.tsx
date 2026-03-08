@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
-import heroMockup from "@/assets/hero-mockup.jpg";
+import { PDFUpload } from "@/components/PDFUpload";
 
 export const HeroSection = () => {
   return (
@@ -22,7 +22,7 @@ export const HeroSection = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button variant="cta" size="lg" className="group">
-                Get Started Now
+                Get Started Free
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
               
@@ -33,20 +33,13 @@ export const HeroSection = () => {
             </div>
 
             <div className="mt-8 text-white/80 text-sm">
-              ✓ No credit card required • ✓ 14-day free trial • ✓ Cancel anytime
+              ✓ 100% Free to Start • ✓ No credit card required • ✓ 500+ Templates
             </div>
           </div>
 
-          {/* Hero Image */}
+          {/* PDF Upload */}
           <div className="relative">
-            <div className="relative rounded-lg overflow-hidden shadow-2xl">
-              <img 
-                src={heroMockup} 
-                alt="eScribe Editor Interface" 
-                className="w-full h-auto"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-            </div>
+            <PDFUpload />
             
             {/* Floating elements */}
             <div className="absolute -top-4 -left-4 w-24 h-24 bg-secondary/20 rounded-full blur-xl"></div>
