@@ -1,29 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ArrowLeft, BookOpen, Type, Minus, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, BookOpen, Minus, Plus, ZoomIn, ZoomOut } from "lucide-react";
 
-// Use CDN worker for pdfjs
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-
-interface PageContent {
-  pageNum: number;
-  text: string;
-}
+// Disable worker - use fake worker for compatibility
+pdfjsLib.GlobalWorkerOptions.workerSrc = "";
 
 const EBookReader = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const file: File | null = location.state?.file ?? null;
 
-  const [pages, setPages] = useState<PageContent[]>([]);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [scale, setScale] = useState(1.5);
   const [title, setTitle] = useState("My eBook");
-  const [fontSize, setFontSize] = useState(18);
   const [error, setError] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Load PDF document
   useEffect(() => {
     if (!file) {
       setError("No PDF file provided.");
@@ -35,28 +33,16 @@ const EBookReader = () => {
     reader.onload = async () => {
       try {
         const typedArray = new Uint8Array(reader.result as ArrayBuffer);
-        const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+        const pdf = await pdfjsLib.getDocument({
+          data: typedArray,
+          useWorkerFetch: false,
+          isEvalSupported: false,
+          useSystemFonts: true,
+        }).promise;
 
-        const extracted: PageContent[] = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const text = content.items
-            .map((item: any) => item.str)
-            .join(" ")
-            .replace(/\s+/g, " ")
-            .trim();
-          extracted.push({ pageNum: i, text });
-        }
-
-        setPages(extracted);
-        // Try to extract title from first page
-        if (extracted.length > 0 && extracted[0].text.length > 0) {
-          const firstLine = extracted[0].text.split(/[.\n]/)[0].trim();
-          if (firstLine.length > 3 && firstLine.length < 80) {
-            setTitle(firstLine);
-          }
-        }
+        setPdfDoc(pdf);
+        setTotalPages(pdf.numPages);
+        setTitle(file.name.replace(/\.pdf$/i, ""));
       } catch (e) {
         console.error("PDF parse error:", e);
         setError("Failed to parse PDF. Please try a different file.");
@@ -67,17 +53,42 @@ const EBookReader = () => {
     reader.readAsArrayBuffer(file);
   }, [file]);
 
-  const totalPages = pages.length;
-  const currentContent = pages[currentPage];
-  const progress = totalPages > 0 ? ((currentPage + 1) / totalPages) * 100 : 0;
+  // Render current page to canvas
+  const renderPage = useCallback(async () => {
+    if (!pdfDoc || !canvasRef.current) return;
+
+    try {
+      const page = await pdfDoc.getPage(currentPage);
+      const viewport = page.getViewport({ scale });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+      }).promise;
+    } catch (e) {
+      console.error("Page render error:", e);
+    }
+  }, [pdfDoc, currentPage, scale]);
+
+  useEffect(() => {
+    renderPage();
+  }, [renderPage]);
+
+  const progress = totalPages > 0 ? (currentPage / totalPages) * 100 : 0;
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">Converting your PDF...</h2>
-          <p className="text-muted-foreground">Extracting content and formatting your eBook</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Loading your eBook...</h2>
+          <p className="text-muted-foreground">Preparing pages for reading</p>
         </div>
       </div>
     );
@@ -112,12 +123,12 @@ const EBookReader = () => {
           </h1>
 
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setFontSize((s) => Math.max(12, s - 2))}>
-              <Minus className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setScale((s) => Math.max(0.5, s - 0.25))}>
+              <ZoomOut className="h-3 w-3" />
             </Button>
-            <Type className="h-4 w-4 text-muted-foreground" />
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setFontSize((s) => Math.min(28, s + 2))}>
-              <Plus className="h-3 w-3" />
+            <span className="text-xs text-muted-foreground w-10 text-center">{Math.round(scale * 100)}%</span>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setScale((s) => Math.min(3, s + 0.25))}>
+              <ZoomIn className="h-3 w-3" />
             </Button>
           </div>
         </div>
@@ -129,75 +140,30 @@ const EBookReader = () => {
       </div>
 
       {/* Book content */}
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="bg-card rounded-xl shadow-elegant border border-border p-8 sm:p-12 min-h-[60vh] relative">
-          {/* Page number badge */}
-          <div className="absolute top-4 right-4 bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">
-            Page {currentPage + 1} of {totalPages}
-          </div>
-
-          {/* Content */}
-          <div
-            className="prose prose-lg max-w-none text-foreground leading-relaxed"
-            style={{ fontSize: `${fontSize}px`, lineHeight: 1.8 }}
-          >
-            {currentContent?.text ? (
-              currentContent.text.split(/(?<=[.!?])\s+/).map((sentence, i) => (
-                <p key={i} className="mb-4 text-foreground/90">
-                  {sentence}
-                </p>
-              ))
-            ) : (
-              <p className="text-muted-foreground italic text-center py-12">
-                This page has no extractable text content.
-              </p>
-            )}
-          </div>
+      <main className="container mx-auto px-4 py-8 flex flex-col items-center">
+        <div className="bg-card rounded-xl shadow-elegant border border-border p-4 mb-6 overflow-auto max-w-full">
+          <canvas ref={canvasRef} className="mx-auto block max-w-full h-auto" style={{ maxHeight: "75vh" }} />
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8">
+        <div className="flex items-center justify-center gap-4 w-full max-w-lg">
           <Button
             variant="outline"
-            onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-            disabled={currentPage === 0}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
           >
             <ChevronLeft className="mr-2 h-4 w-4" />
             Previous
           </Button>
 
-          <div className="flex gap-1">
-            {Array.from({ length: Math.min(totalPages, 11) }, (_, i) => {
-              let pageIdx: number;
-              if (totalPages <= 11) {
-                pageIdx = i;
-              } else if (currentPage < 5) {
-                pageIdx = i;
-              } else if (currentPage > totalPages - 6) {
-                pageIdx = totalPages - 11 + i;
-              } else {
-                pageIdx = currentPage - 5 + i;
-              }
-              return (
-                <button
-                  key={pageIdx}
-                  onClick={() => setCurrentPage(pageIdx)}
-                  className={`w-8 h-8 rounded-full text-xs font-medium transition-colors ${
-                    pageIdx === currentPage
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {pageIdx + 1}
-                </button>
-              );
-            })}
-          </div>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
 
           <Button
             variant="outline"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={currentPage >= totalPages - 1}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
           >
             Next
             <ChevronRight className="ml-2 h-4 w-4" />
